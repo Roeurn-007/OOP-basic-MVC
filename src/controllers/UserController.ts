@@ -1,70 +1,82 @@
 import { Request, Response } from 'express';
-import User from '../models/User.js';
+import BaseController from './BaseController.js';
+import UserService from '../services/UserService.js';
 
-class UserController {
-  static async getAllUsers(req: Request, res: Response) {
-    try {
-      const users = await User.findAll();
-      res.json(users);
-    } catch (error) {
-      console.error(error);
-      res.status(500).json({ error: 'Internal server error' });
-    }
+class UserController extends BaseController {
+  constructor(private readonly userService: UserService) {
+    super();
   }
 
-  static async getUserById(req: Request, res: Response) {
+  getAllUsers = async (req: Request, res: Response) => {
+    try {
+      const result = await this.userService.getAllUsers();
+      return this.success(res, result.data, result.statusCode);
+    } catch (error) {
+      console.error(error);
+      return this.error(res, 'Internal server error');
+    }
+  };
+
+  getUserById = async (req: Request, res: Response) => {
     try {
       const { id } = req.params;
-      const user = await User.findById(Number(id));
-      if (!user) {
-        return res.status(404).json({ error: 'User not found' });
+      const result = await this.userService.getUserById(Number(id));
+      if (result.error) {
+        return this.error(res, result.error, result.statusCode);
       }
-      res.json(user);
+
+      return this.success(res, result.data, result.statusCode);
     } catch (error) {
       console.error(error);
-      res.status(500).json({ error: 'Internal server error' });
+      return this.error(res, 'Internal server error');
     }
-  }
+  };
 
-  static async createUser(req: Request, res: Response) {
+  createUser = async (req: Request, res: Response) => {
     try {
       const { name, email } = req.body;
-      const user = await User.create(name, email);
-      res.status(201).json(user);
+      const result = await this.userService.createUser(name, email);
+      if (result.error) {
+        return this.error(res, result.error, result.statusCode);
+      }
+
+      return this.success(res, result.data, result.statusCode);
     } catch (error) {
       console.error(error);
-      res.status(500).json({ error: 'Internal server error' });
+      return this.error(res, 'Internal server error');
     }
-  }
+  };
 
-  static async updateUser(req: Request, res: Response) {
+  updateUser = async (req: Request, res: Response) => {
     try {
       const { id } = req.params;
       const { name, email } = req.body;
-      const success = await User.update(Number(id), name, email);
-      if (!success) {
-        return res.status(404).json({ error: 'User not found' });
+      const result = await this.userService.updateUser(Number(id), name, email);
+      if (result.error) {
+        return this.error(res, result.error, result.statusCode);
       }
-      res.json({ message: 'User updated successfully' });
+
+      return this.success(res, result.data, result.statusCode);
     } catch (error) {
       console.error(error);
-      res.status(500).json({ error: 'Internal server error' });
+      return this.error(res, 'Internal server error');
     }
-  }
+  };
 
-  static async deleteUser(req: Request, res: Response) {
+  deleteUser = async (req: Request, res: Response) => {
     try {
       const { id } = req.params;
-      const success = await User.delete(Number(id));
-      if (!success) {
-        return res.status(404).json({ error: 'User not found' });
+      const result = await this.userService.deleteUser(Number(id));
+      if (result.error) {
+        return this.error(res, result.error, result.statusCode);
       }
-      res.json({ message: 'User deleted successfully' });
+
+      return this.success(res, result.data, result.statusCode);
     } catch (error) {
       console.error(error);
-      res.status(500).json({ error: 'Internal server error' });
+      return this.error(res, 'Internal server error');
     }
-  }
+  };
 }
 
 export default UserController;
